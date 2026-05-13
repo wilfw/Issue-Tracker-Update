@@ -16,6 +16,8 @@ model Issue {
   title            String   @db.VarChar(255)
   description      String   @db.Text
   status           Status   @default(OPEN)
+  priority         Priority  @default(MEDIUM)      
+  dueDate          DateTime? 
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   assignedToUserId String?  @db.VarChar(255)
@@ -29,6 +31,14 @@ enum Status {
   IN_PROGRESS
   CLOSED
 }
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+
 
 model Account {
   id                String  @id @default(cuid())

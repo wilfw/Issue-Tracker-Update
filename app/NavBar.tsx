@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
 import { AiFillBug } from "react-icons/ai";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { Avatar, Box, Container, DropdownMenu, Flex, Text } from "@radix-ui/themes";
 import { useTheme } from "./ThemeProvider";
 
@@ -30,7 +30,6 @@ const ThemeToggle = () => {
         padding: 0,
       }}
     >
-      {/* Sliding knob */}
       <span style={{
         position: 'absolute',
         top: '2px',
@@ -102,6 +101,7 @@ const NavLinks = () => {
     { label: "Dashboard", href: "/" },
     { label: "Issues", href: "/issues/list" },
   ];
+
   return (
     <ul style={{ display: 'flex', gap: '4px', listStyle: 'none', margin: 0, padding: 0 }}>
       {links.map((link) => {
@@ -128,32 +128,50 @@ const NavLinks = () => {
 
 const AuthStatus = () => {
   const { status, data: session } = useSession();
+
   if (status === "loading") return <Skeleton width="3rem" />;
+
   if (status === "unauthenticated")
     return (
       <Link href="/api/auth/signin" className="new-issue-btn" style={{ boxShadow: 'none' }}>
         Sign in
       </Link>
     );
+
   return (
     <Box>
       <DropdownMenu.Root>
-        <DropdownMenu.Trigger>
-          <Avatar
-            src={session!.user!.image!}
-            fallback={session!.user!.name?.[0] ?? '?'}
-            size="2" radius="full"
-            style={{ cursor: 'pointer', border: '2px solid rgba(108,99,255,0.4)' }}
-            referrerPolicy="no-referrer"
-          />
+        <DropdownMenu.Trigger asChild>
+          <button style={{
+            background: 'none',
+            border: 'none',
+            padding: 0,
+            cursor: 'pointer',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+          }}>
+            <Avatar
+              src={session!.user!.image!}
+              fallback={session!.user!.name?.[0] ?? '?'}
+              size="2"
+              radius="full"
+              style={{ border: '2px solid rgba(108,99,255,0.4)', pointerEvents: 'none' }}
+              referrerPolicy="no-referrer"
+            />
+          </button>
         </DropdownMenu.Trigger>
-        <DropdownMenu.Content>
-          <DropdownMenu.Label><Text size="2">{session!.user!.email}</Text></DropdownMenu.Label>
-          <DropdownMenu.Item><Link href="/api/auth/signout">Log out</Link></DropdownMenu.Item>
+        <DropdownMenu.Content align="end">
+          <DropdownMenu.Label>
+            <Text size="2">{session!.user!.email}</Text>
+          </DropdownMenu.Label>
+          <DropdownMenu.Separator />
+          <DropdownMenu.Item color="red" onSelect={() => signOut({ callbackUrl: "/" })}>
+            Log out
+          </DropdownMenu.Item>
         </DropdownMenu.Content>
       </DropdownMenu.Root>
     </Box>
   );
 };
-
 export default NavBar;

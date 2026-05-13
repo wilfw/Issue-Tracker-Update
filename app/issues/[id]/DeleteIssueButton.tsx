@@ -2,6 +2,7 @@
 
 import { Spinner } from '@/app/components';
 import { AlertDialog, Button, Flex } from '@radix-ui/themes';
+import { TrashIcon } from '@radix-ui/react-icons';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -17,7 +18,7 @@ const DeleteIssueButton = ({ issueId }: { issueId: number }) => {
       await axios.delete('/api/issues/' + issueId);
       router.push('/issues/list');
       router.refresh();
-    } catch (error) {
+    } catch {
       setDeleting(false);
       setError(true);
     }
@@ -27,27 +28,31 @@ const DeleteIssueButton = ({ issueId }: { issueId: number }) => {
     <>
       <AlertDialog.Root>
         <AlertDialog.Trigger>
-          <Button color="red" disabled={isDeleting}>
+          <button disabled={isDeleting} style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+            padding: '9px 16px', borderRadius: '9px', width: '100%',
+            background: 'rgba(255,92,92,0.08)', border: '1px solid rgba(255,92,92,0.25)',
+            color: 'var(--red)', fontWeight: 600, fontSize: '0.875rem',
+            cursor: isDeleting ? 'not-allowed' : 'pointer', transition: 'all 0.15s ease',
+            opacity: isDeleting ? 0.6 : 1,
+          }}>
+            {isDeleting ? <Spinner /> : <TrashIcon />}
             Delete Issue
-            {isDeleting && <Spinner />}
-          </Button>
+          </button>
         </AlertDialog.Trigger>
-        <AlertDialog.Content>
-          <AlertDialog.Title>Confirm Deletion</AlertDialog.Title>
-          <AlertDialog.Description>
-            Are you sure you want to delete this issue? This action cannot be
-            undone.
+        <AlertDialog.Content style={{ maxWidth: '420px' }}>
+          <AlertDialog.Title style={{ fontFamily: "'Cabinet Grotesk', sans-serif", fontWeight: 800 }}>
+            Delete this issue?
+          </AlertDialog.Title>
+          <AlertDialog.Description style={{ color: 'var(--text-2)' }}>
+            This action is permanent and cannot be undone.
           </AlertDialog.Description>
-          <Flex mt="4" gap="3" justify="end">
+          <Flex mt="5" gap="3" justify="end">
             <AlertDialog.Cancel>
-              <Button variant="soft" color="gray">
-                Cancel
-              </Button>
+              <Button variant="soft" color="gray">Cancel</Button>
             </AlertDialog.Cancel>
             <AlertDialog.Action>
-              <Button color="red" onClick={deleteIssue}>
-                Delete Issue
-              </Button>
+              <Button color="red" onClick={deleteIssue}>Delete</Button>
             </AlertDialog.Action>
           </Flex>
         </AlertDialog.Content>
@@ -55,21 +60,11 @@ const DeleteIssueButton = ({ issueId }: { issueId: number }) => {
       <AlertDialog.Root open={error}>
         <AlertDialog.Content>
           <AlertDialog.Title>Error</AlertDialog.Title>
-          <AlertDialog.Description>
-            This issue could not be deleted.
-          </AlertDialog.Description>
-          <Button
-            color="gray"
-            variant="soft"
-            mt="2"
-            onClick={() => setError(false)}
-          >
-            OK
-          </Button>
+          <AlertDialog.Description>This issue could not be deleted.</AlertDialog.Description>
+          <Button color="gray" variant="soft" mt="2" onClick={() => setError(false)}>OK</Button>
         </AlertDialog.Content>
       </AlertDialog.Root>
     </>
   );
 };
-
 export default DeleteIssueButton;

@@ -1,20 +1,91 @@
-import { IssueStatusBadge } from '@/app/components';
+'use client';
+
 import { Issue } from '@prisma/client';
-import { Card, Flex, Heading, Text } from '@radix-ui/themes';
+import { Flex, Text } from '@radix-ui/themes';
 import ReactMarkdown from 'react-markdown';
+import axios from 'axios';
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
+import { CalendarIcon } from '@radix-ui/react-icons';
+
+const statusOptions = [
+  { value: 'OPEN', label: 'Open', color: 'var(--red)', bg: 'var(--red-bg)', border: 'rgba(255,92,92,0.3)' },
+  { value: 'IN_PROGRESS', label: 'In Progress', color: 'var(--yellow)', bg: 'var(--yellow-bg)', border: 'rgba(255,179,64,0.3)' },
+  { value: 'CLOSED', label: 'Closed', color: 'var(--green)', bg: 'var(--green-bg)', border: 'rgba(54,211,153,0.3)' },
+];
 
 const IssueDetails = ({ issue }: { issue: Issue }) => {
+  const router = useRouter();
+  const current = statusOptions.find(s => s.value === issue.status)!;
+
+  const handleStatusChange = async (status: string) => {
+    try {
+      await axios.patch(`/api/issues/${issue.id}`, { status });
+      toast.success('Status updated!');
+      router.refresh();
+    } catch {
+      toast.error('Could not update status.');
+    }
+  };
+
   return (
-    <>
-      <Heading>{issue.title}</Heading>
-      <Flex className="space-x-3" my="2">
-        <IssueStatusBadge status={issue.status} />
-        <Text>{issue.createdAt.toDateString()}</Text>
-      </Flex>
-      <Card className="prose max-w-full" mt="4">
-        <ReactMarkdown>{issue.description}</ReactMarkdown>
-      </Card>
-    </>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {/* Header */}
+      <div style={{ paddingBottom: '24px', borderBottom: '1px solid var(--border)' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '16px' }}>
+          <span style={{
+            marginTop: '8px', width: '10px', height: '10px', borderRadius: '50%', flexShrink: 0,
+            background: current.color, boxShadow: `0 0 10px ${current.color}`, display: 'inline-block',
+          }} />
+          <h1 style={{
+            fontFamily: "'Cabinet Grotesk', sans-serif", fontWeight: 800,
+            fontSize: 'clamp(1.4rem, 3vw, 1.9rem)', color: 'var(--text-1)',
+            lineHeight: 1.2, margin: 0,
+          }}>
+            {issue.title}
+          </h1>
+        </div>
+
+        <Flex align="center" gap="3" wrap="wrap">
+          {/* Status pills */}
+          <div style={{ display: 'flex', gap: '6px' }}>
+            {statusOptions.map((opt) => {
+              const isActive = opt.value === issue.status;
+              return (
+                <button key={opt.value} onClick={() => !isActive && handleStatusChange(opt.value)}
+                  style={{
+                    padding: '5px 12px', borderRadius: '99px', border: `1px solid ${isActive ? opt.border : 'var(--border)'}`,
+                    background: isActive ? opt.bg : 'transparent',
+                    color: isActive ? opt.color : 'var(--text-3)',
+                    fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase',
+                    cursor: isActive ? 'default' : 'pointer',
+                    transition: 'all 0.15s ease',
+                    fontFamily: "'Cabinet Grotesk', sans-serif",
+                  }}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <Flex align="center" gap="1" style={{ color: 'var(--text-3)', fontSize: '0.8rem' }}>
+            <CalendarIcon />
+            <span>{issue.createdAt.toDateString()}</span>
+          </Flex>
+        </Flex>
+      </div>
+
+      {/* Description */}
+      <div style={{
+        background: 'var(--surface)', border: '1px solid var(--border)',
+        borderRadius: 'var(--radius)', padding: '24px',
+      }}>
+        <div className="prose max-w-full">
+          <ReactMarkdown>{issue.description}</ReactMarkdown>
+        </div>
+      </div>
+    </div>
   );
 };
 
